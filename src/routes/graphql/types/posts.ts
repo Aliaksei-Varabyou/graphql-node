@@ -1,12 +1,13 @@
-import { GraphQLID, GraphQLObjectType, GraphQLString } from "graphql";
+import { GraphQLNonNull, GraphQLObjectType, GraphQLString } from "graphql";
 import { MemberTypeEnum } from "./member-types.js";
+import { UUIDType } from "./uuid.js";
 
-export const PostType = new GraphQLObjectType ({
+export const Post = new GraphQLObjectType ({
   name: 'PostType',
   fields: () => ({
-    id: { type: GraphQLID },
-    title: {type: GraphQLString },
-    content: {type: GraphQLString },
-    authorId: { type: MemberTypeEnum },
+    id: { type: new GraphQLNonNull(UUIDType) },
+    title: {type: new GraphQLNonNull(GraphQLString) },
+    content: {type: new GraphQLNonNull(GraphQLString) },
+    // authorId: { type: UUIDType },
   })
 });

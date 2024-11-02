@@ -30,7 +30,13 @@ export const User = new GraphQLObjectType ({
       type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(User))),
       resolve: async (user, _args, context: GraphQLContext) => {
         return await context.prisma.user.findMany({
-          where: { id: {in: user.subscribedToUser} }
+          where: {
+            subscribedToUser: {
+              some: {
+                subscriberId: user.id,
+              },
+            },
+          },
         });
       }
     },
@@ -38,7 +44,13 @@ export const User = new GraphQLObjectType ({
       type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(User))),
       resolve: async (user, _args, context: GraphQLContext) => {
         return await context.prisma.user.findMany({
-          where: { id: {in: user.userSubscribedTo} }
+          where: {
+            userSubscribedTo: {
+              some: {
+                authorId: user.id,
+              },
+            },
+          },
         });
       }
     },

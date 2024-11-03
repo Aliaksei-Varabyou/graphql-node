@@ -1,4 +1,10 @@
-import { GraphQLFloat, GraphQLList, GraphQLNonNull, GraphQLObjectType, GraphQLString } from "graphql";
+import {
+  GraphQLFloat,
+  GraphQLList,
+  GraphQLNonNull,
+  GraphQLObjectType,
+  GraphQLString
+} from "graphql";
 import { UUIDType } from "./uuid.js";
 import { Profile } from "./profiles.js";
 import { GraphQLContext } from "../context.js";

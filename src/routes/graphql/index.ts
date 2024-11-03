@@ -4,6 +4,7 @@ import { graphql, GraphQLSchema, validate, specifiedRules, parse } from 'graphql
 import { RootQueryType } from './queries.js';
 import { Mutations } from './mutations.js';
 import depthLimit from 'graphql-depth-limit';
+import { getLoaders } from './loaders.js';
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   const { prisma } = fastify;
@@ -32,7 +33,8 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         source,
         variableValues: req.body.variables,
         contextValue: {
-          prisma: prisma
+          prisma: prisma,
+          loaders: getLoaders(prisma)
         }
       });
     },

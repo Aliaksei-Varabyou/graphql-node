@@ -54,7 +54,7 @@ export const RootQueryType = new GraphQLObjectType({
       }
     },
     user: {
-      type: new GraphQLNonNull(User),
+      type: User,
       args: {
         id: { type: new GraphQLNonNull(UUIDType) },
       },

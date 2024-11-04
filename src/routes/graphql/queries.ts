@@ -1,4 +1,5 @@
 import { GraphQLList, GraphQLNonNull, GraphQLObjectType } from "graphql";
+import { parseResolveInfo } from "graphql-parse-resolve-info";
 import { MemberType, MemberTypeEnum } from "./types/member-types.js";
 import { GraphQLContext } from "./context.js";
 import { Post } from "./types/posts.js";
@@ -12,7 +13,7 @@ export const RootQueryType = new GraphQLObjectType({
     memberTypes: {
       type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(MemberType))),
       resolve: async (_, _args, context: GraphQLContext) => {
-        return context.prisma.memberType.findMany();
+        return await context.prisma.memberType.findMany();
       }
     },
     memberType: {
@@ -31,7 +32,7 @@ export const RootQueryType = new GraphQLObjectType({
     posts: {
       type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(Post))),
       resolve: async (_, _args, context: GraphQLContext) => {
-        return context.prisma.post.findMany();
+        return await context.prisma.post.findMany();
       }
     },
     post: {
@@ -49,8 +50,45 @@ export const RootQueryType = new GraphQLObjectType({
     },
     users: {
       type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(User))),
-      resolve: async (_, _args, context: GraphQLContext) => {
-        return context.prisma.user.findMany();
+      resolve: async (_, _args, context: GraphQLContext, info) => {
+        const parsedInfo = parseResolveInfo(info);
+
+        if (parsedInfo && parsedInfo.fieldsByTypeName) {
+          const typeName = Object.keys(parsedInfo.fieldsByTypeName)[0];
+          const fields = Object.keys(parsedInfo.fieldsByTypeName[typeName]);
+          const includeSubscribedToUser = fields.includes('subscribedToUser');
+          const includeUserSubscribedTo = fields.includes('userSubscribedTo');
+
+          const users = await context.prisma.user.findMany({
+            include: {
+              subscribedToUser: includeSubscribedToUser,
+              userSubscribedTo: includeUserSubscribedTo,
+            },
+          });
+
+          if (includeSubscribedToUser) {
+            users.forEach(user => {
+              const subscribersIds = user.subscribedToUser.map((subscriber) => subscriber.subscriberId);
+              context.loaders.subscribedToUserLoader.prime(
+                user.id,
+                users.filter(filteredUser => subscribersIds.includes(filteredUser.id.toString()))
+              );
+            });
+          }
+          if (includeUserSubscribedTo) {
+            users.forEach(user => {
+              const authorsIds = user.userSubscribedTo.map((author) => author.authorId);
+              context.loaders.userSubscribedToLoader.prime(
+                user.id,
+                users.filter(filteredUser => authorsIds.includes(filteredUser.id.toString()))
+              );
+            });
+          }
+
+          return users;
+        } else {
+          return [];
+        }
       }
     },
     user: {
@@ -73,7 +111,7 @@ export const RootQueryType = new GraphQLObjectType({
     profiles: {
       type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(Profile))),
       resolve: async (_, _args, context: GraphQLContext) => {
-        return context.prisma.profile.findMany();
+        return await context.prisma.profile.findMany();
       }
     },
     profile: {
